@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 // import { ThemeContext } from "../useContext/globalContext";
 import axios from "axios";
 import { useNavigate } from "react-router";
@@ -7,9 +7,8 @@ import Swal from "sweetalert2";
 import { useForm } from "react-hook-form";
 import { MenuItem } from "@mui/material";
 const Main = () => {
-  const baseurl = process.env.REACT_APP_API_URL
+  const baseurl = process.env.REACT_APP_API_URL;
   const navigate = useNavigate();
-  // const { darkMode } = useContext(ThemeContext);
   const Auth = JSON.parse(localStorage.getItem("auth"));
 
   const [allProducts, setAllProducts] = useState([]);
@@ -17,21 +16,49 @@ const Main = () => {
   const [checked, setChecked] = useState([]);
   const [filteredProducts, setFilteredProducts] = useState([]);
   const [size, setSize] = useState({});
+  const [quantities, setQuantities] = useState({});
+  const [isOpen, setIsColosed] = useState(false);
 
   var auth = JSON.parse(localStorage.getItem("auth"));
   const userId = auth?.user?._id;
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm();
+
+  const { register, handleSubmit, formState: { errors } } = useForm();
+
+  const getAllCategory = useCallback(async () => {
+    try {
+      const { data } = await axios.get(`${baseurl}/auth/category/get-category`);
+      if (data?.success) {
+        setCategories(data ? data.category : []);
+      }
+    } catch (error) {
+      console.log(error);
+      window.alert("Something went wrong in getting categories");
+    }
+  }, [baseurl]);
+
+  const getAllProduct = useCallback(async () => {
+    try {
+      const { data } = await axios.get(`${baseurl}/auth/product/get-product`);
+      setAllProducts(data.product);
+      setFilteredProducts(data?.product);
+    } catch (error) {
+      console.log(error);
+      window.alert("Failed to Get All Product");
+    }
+  }, [baseurl]);
+
+  useEffect(() => {
+    getAllCategory();
+  }, [getAllCategory]);
+
+  useEffect(() => {
+    getAllProduct();
+  }, [getAllProduct]);
 
   const onSubmit = async (data) => {
     try {
-      debugger;
       data.userId = userId;
       const res = await axios.post(`${baseurl}/message/get-in-touch`, data);
-      console.log(data);
       if (res.data.success) {
         Swal.fire({
           position: "top-center",
@@ -49,49 +76,18 @@ const Main = () => {
           timer: 2000,
         });
       }
-      getAllCategory()
-      getAllProduct()
+      getAllCategory();
+      getAllProduct();
     } catch (error) {
       Swal.fire({
         position: "top-center",
         icon: "error",
-        title: " Failed to sent Message successfully",
+        title: "Failed to send message successfully",
         showConfirmButton: false,
         timer: 2000,
       });
     }
   };
-  const getAllCategory = async () => {
-    try {
-      const { data } = await axios.get(`${baseurl}/auth/category/get-category`);
-      if (data?.success) {
-        setCategories(data ? data.category : "");
-      }
-    } catch (error) {
-      console.log(error);
-      window.alert("Something went wrong in getting categories");
-    }
-  };
-  useEffect(() => {
-    getAllCategory();
-  }, []);
-
- 
-  const getAllProduct = async () => {
-    try {
-      const { data } = await axios.get(`${baseurl}/auth/product/get-product`);
-      setAllProducts(data.product);
-      setFilteredProducts(data?.product);
-    } catch (error) {
-      console.log(error);
-      window.alert("Failed to Get All Product");
-    }
-  };
-  useEffect(() => {
-    getAllProduct();
-  }, []);
-
-  // Function to handle category filter
 
   const handlefilterProduct = (value, id) => {
     let all = [...checked];
@@ -110,11 +106,7 @@ const Main = () => {
       setFilteredProducts(filteredProducts);
     }
   };
-  /////////////////-------------quantity----------------\\\\\\\\\\\\\\\\\\\\\
-  // Create an object to store quantities for each product
-  const [quantities, setQuantities] = useState("");
 
-  // Function to increment the count for a specific product
   const increment = (productId) => {
     setQuantities((prevQuantities) => ({
       ...prevQuantities,
@@ -122,7 +114,6 @@ const Main = () => {
     }));
   };
 
-  // Function to decrement the count for a specific product
   const decrement = (productId) => {
     if (quantities[productId] > 0) {
       setQuantities((prevQuantities) => ({
@@ -155,24 +146,23 @@ const Main = () => {
           ADDcartItem
         );
         if (data?.success) {
-          window.alert("Product Add to Cart ");
+          window.alert("Product added to Cart");
         }
+        getAllCategory();
+        getAllProduct();
       } catch (error) {
         console.log(error);
-        window.alert("Failed To Product Add to Cart ");
+        window.alert("Failed to add product to Cart");
       }
-      getAllCategory()
-      getAllProduct()
     } else {
       navigate("/");
     }
   };
 
-  const [isOpen, setIsColosed] = useState(false);
-
   const handleFilterView = () => {
     setIsColosed(!isOpen);
   };
+
   return (
     <div>
       <main>
@@ -733,13 +723,14 @@ const Main = () => {
                                               </li>
                                             </ol>
                                             <div className="plus">
-                                              <a
+                                              <button
+                                              type="button"
                                                 onClick={() =>
                                                   addToCart(product)
                                                 }
                                               >
                                                 <span className="flaticon-plus" />
-                                              </a>
+                                              </button>
                                             </div>
                                           </div>
                                         </div>

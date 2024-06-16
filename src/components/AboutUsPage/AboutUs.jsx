@@ -12,7 +12,7 @@ const AboutUs = () => {
               <div className="col-md-4 col-sm-6 col-xs-6">
                 <div className="wrapper">
                   <div className="content">
-                    <div className="icon">
+                   <div className="icon">
                       <span className="flaticon-clock" />
                     </div>
                     <div className="sentence">

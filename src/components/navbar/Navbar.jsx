@@ -29,27 +29,32 @@ const Navbar = () => {
     localStorage.removeItem("auth");
     navigate("/login");
   };
-
+ 
   const [count, setCount] = useState("0");
-  const getAllCartItem = async () => {
-    if (auth) {
-      try {
-        const { data } = await axios.get(`${baseurl}/auth/cart/get-cart/${userId}`);
-        if (auth?.user?.role !== 1) {
-          setCount(data?.cart?.length);
-        }
-      } catch (error) {
-        console.log(error);
-        window.alert("Failed to Get All Product");
-      }
-    } else {
-      navigate("/");
-    }
-  };
   useEffect(() => {
-    getAllCartItem();
-  }, [userId, auth, navigate]);
+    const getAllCartItem = async () => {
+      if (auth) {
+        try {
+          const { data } = await axios.get(
+            `${baseurl}/auth/cart/get-cart/${userId}`
+          );
+          if (auth?.user?.role !== 1) {
+            setCount(data?.cart?.length);
+          }
+        } catch (error) {
+          console.log(error);
+          window.alert("Failed to Get All Product");
+        }
+      } else {
+        navigate("/");
+      }
+    };
 
+    getAllCartItem(); // Call getAllCartItem inside useEffect
+
+  }, [auth, baseurl, navigate, userId]); // Include dependencies in useEffect
+
+  
   const cartCounter = count;
   return (
     <div>
